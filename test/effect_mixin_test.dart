@@ -24,6 +24,21 @@ class _AN extends AsyncNotifier<int> with EffectMixin<_E, int> {
 
 final _asyncProvider = AsyncNotifierProvider<_AN, int>(_AN.new);
 
+// Notifier with custom emitter (replay)
+class _RN extends Notifier<int> with EffectMixin<_E, int> {
+  @override
+  int build() => 0;
+  @override
+  EffectEmitter<_E> createEffectEmitter() => EffectEmitter<_E>(replay: 3);
+  void emitWithoutListener() {
+    emitEffect(const _E());
+    emitEffect(const _E());
+    emitEffect(const _E());
+  }
+}
+
+final _replayProvider = NotifierProvider<_RN, int>(_RN.new);
+
 // EffectsNotifier base class
 class _BN extends EffectsNotifier<_E, int> {
   @override
@@ -110,6 +125,20 @@ void main() {
       n.trigger();
       await Future(() {});
       expect(seen, hasLength(1));
+      await sub.cancel();
+      container.dispose();
+    });
+  });
+
+  group('createEffectEmitter with replay', () {
+    test('replays buffered effects to late listeners', () async {
+      final container = ProviderContainer();
+      final n = container.read(_replayProvider.notifier);
+      n.emitWithoutListener();
+      final seen = <_E>[];
+      final sub = n.effects.listen(seen.add);
+      await Future(() {});
+      expect(seen, hasLength(3));
       await sub.cancel();
       container.dispose();
     });

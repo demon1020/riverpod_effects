@@ -52,22 +52,30 @@ mixin EffectMixin<E extends UiEffect, T> implements EffectNotifier<E> {
   @protected
   EffectEmitter<E> createEffectEmitter() => EffectEmitter<E>();
 
-  EffectEmitter<E> get _safeEmitter {
-    if (_emitter == null) {
-      _emitter = createEffectEmitter();
+  void _initEmitter() {
+    if (_emitter != null) return;
+    _emitter = createEffectEmitter();
+    try {
       ref.onDispose(_emitter!.dispose);
+    } on Object {
+      // notifier already disposed — emitter will be GC'd
     }
-    return _emitter!;
   }
 
   @override
-  Stream<E> get effects => _safeEmitter.stream;
+  Stream<E> get effects {
+    _initEmitter();
+    return _emitter!.stream;
+  }
 
   /// Whether at least one listener is currently subscribed.
   bool get hasListener => _emitter?.hasListener ?? false;
 
   /// Emits a one-time effect to all current and future listeners.
-  void emitEffect(E effect) => _emitter?.emit(effect);
+  void emitEffect(E effect) {
+    _initEmitter();
+    _emitter!.emit(effect);
+  }
 
   /// Subscribes to the effect stream from non-widget code.
   StreamSubscription<E> listen(
@@ -75,11 +83,13 @@ mixin EffectMixin<E extends UiEffect, T> implements EffectNotifier<E> {
     Function? onError,
     void Function()? onDone,
     bool? cancelOnError,
-  }) =>
-      _safeEmitter.listen(
-        onData,
-        onError: onError,
-        onDone: onDone,
-        cancelOnError: cancelOnError ?? false,
-      );
+  }) {
+    _initEmitter();
+    return _emitter!.listen(
+      onData,
+      onError: onError,
+      onDone: onDone,
+      cancelOnError: cancelOnError ?? false,
+    );
+  }
 }
