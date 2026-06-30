@@ -11,6 +11,7 @@
         "flutter_riverpod",
         "freezed_annotation",
         "go_router",
+        "riverpod",
         "riverpod_annotation",
         "riverpod_effects"
       ],
@@ -143,6 +144,18 @@
       "dependencies": [
         "meta",
         "riverpod"
+      ]
+    },
+    {
+      "name": "riverpod",
+      "version": "3.0.3",
+      "dependencies": [
+        "async",
+        "clock",
+        "collection",
+        "meta",
+        "state_notifier",
+        "test"
       ]
     },
     {
@@ -572,15 +585,34 @@
       ]
     },
     {
-      "name": "riverpod",
-      "version": "3.0.3",
+      "name": "test",
+      "version": "1.30.0",
       "dependencies": [
+        "analyzer",
         "async",
-        "clock",
+        "boolean_selector",
         "collection",
-        "meta",
-        "state_notifier",
-        "test"
+        "coverage",
+        "http_multi_server",
+        "io",
+        "matcher",
+        "node_preamble",
+        "package_config",
+        "path",
+        "pool",
+        "shelf",
+        "shelf_packages_handler",
+        "shelf_static",
+        "shelf_web_socket",
+        "source_span",
+        "stack_trace",
+        "stream_channel",
+        "test_api",
+        "test_core",
+        "typed_data",
+        "web_socket_channel",
+        "webkit_inspection_protocol",
+        "yaml"
       ]
     },
     {
@@ -756,69 +788,6 @@
       ]
     },
     {
-      "name": "test",
-      "version": "1.30.0",
-      "dependencies": [
-        "analyzer",
-        "async",
-        "boolean_selector",
-        "collection",
-        "coverage",
-        "http_multi_server",
-        "io",
-        "matcher",
-        "node_preamble",
-        "package_config",
-        "path",
-        "pool",
-        "shelf",
-        "shelf_packages_handler",
-        "shelf_static",
-        "shelf_web_socket",
-        "source_span",
-        "stack_trace",
-        "stream_channel",
-        "test_api",
-        "test_core",
-        "typed_data",
-        "web_socket_channel",
-        "webkit_inspection_protocol",
-        "yaml"
-      ]
-    },
-    {
-      "name": "uuid",
-      "version": "4.5.3",
-      "dependencies": [
-        "crypto",
-        "fixnum"
-      ]
-    },
-    {
-      "name": "custom_lint_visitor",
-      "version": "1.0.0+8.4.0",
-      "dependencies": [
-        "analyzer"
-      ]
-    },
-    {
-      "name": "analyzer_plugin",
-      "version": "0.13.10",
-      "dependencies": [
-        "analyzer",
-        "collection",
-        "dart_style",
-        "path",
-        "pub_semver",
-        "yaml"
-      ]
-    },
-    {
-      "name": "vm_service",
-      "version": "15.2.0",
-      "dependencies": []
-    },
-    {
       "name": "webkit_inspection_protocol",
       "version": "1.2.1",
       "dependencies": [
@@ -893,6 +862,38 @@
         "vm_service",
         "yaml"
       ]
+    },
+    {
+      "name": "uuid",
+      "version": "4.5.3",
+      "dependencies": [
+        "crypto",
+        "fixnum"
+      ]
+    },
+    {
+      "name": "custom_lint_visitor",
+      "version": "1.0.0+8.4.0",
+      "dependencies": [
+        "analyzer"
+      ]
+    },
+    {
+      "name": "analyzer_plugin",
+      "version": "0.13.10",
+      "dependencies": [
+        "analyzer",
+        "collection",
+        "dart_style",
+        "path",
+        "pub_semver",
+        "yaml"
+      ]
+    },
+    {
+      "name": "vm_service",
+      "version": "15.2.0",
+      "dependencies": []
     },
     {
       "name": "source_maps",
