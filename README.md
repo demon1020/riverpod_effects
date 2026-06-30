@@ -24,6 +24,12 @@ are cleaned up automatically with the notifier lifecycle.
 
 ---
 
+## Maintainer
+
+Baburam Nabik
+
+---
+
 ## Install
 
 ```yaml
