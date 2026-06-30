@@ -21,9 +21,9 @@ class HomePage extends ConsumerWidget {
           case LogoutRequested():
             context.go('/login');
           case ShowHomeSnackBar(message: final msg):
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(msg)));
         }
       },
       builder: (context) => Scaffold(
@@ -68,10 +68,7 @@ class HomePage extends ConsumerWidget {
               data: (value) => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
-                    value,
-                    style: const TextStyle(fontSize: 24),
-                  ),
+                  Text(value, style: const TextStyle(fontSize: 24)),
                   const SizedBox(height: 32),
                   ElevatedButton.icon(
                     onPressed: notifier.logout,

@@ -12,14 +12,9 @@ Widget _listener(
   Stream<_E> stream,
   void Function(BuildContext, _E) listener, {
   Widget child = const SizedBox(),
-}) =>
-    MaterialApp(
-      home: EffectListener<_E>(
-        stream: stream,
-        listener: listener,
-        child: child,
-      ),
-    );
+}) => MaterialApp(
+  home: EffectListener<_E>(stream: stream, listener: listener, child: child),
+);
 
 void main() {
   group('EffectListener', () {
@@ -27,10 +22,7 @@ void main() {
       final c = StreamController<_E>.broadcast();
       final delivered = <_E>[];
 
-      await tester.pumpWidget(_listener(
-        c.stream,
-        (_, e) => delivered.add(e),
-      ));
+      await tester.pumpWidget(_listener(c.stream, (_, e) => delivered.add(e)));
 
       c.add(const _E());
       await tester.pump();
@@ -93,11 +85,9 @@ void main() {
 
     testWidgets('renders child widget', (tester) async {
       final c = StreamController<_E>.broadcast();
-      await tester.pumpWidget(_listener(
-        c.stream,
-        (_, _) {},
-        child: const Text('child'),
-      ));
+      await tester.pumpWidget(
+        _listener(c.stream, (_, _) {}, child: const Text('child')),
+      );
       expect(find.text('child'), findsOneWidget);
       await c.close();
     });

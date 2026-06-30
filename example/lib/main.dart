@@ -8,20 +8,12 @@ import 'features/login/presentation/view/login_page.dart';
 final goRouter = GoRouter(
   initialLocation: '/login',
   routes: [
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginPage(),
-    ),
-    GoRoute(
-      path: '/home',
-      builder: (context, state) => const HomePage(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
+    GoRoute(path: '/home', builder: (context, state) => const HomePage()),
   ],
 );
 
-void main() => runApp(
-      const ProviderScope(child: RiverpodEffectsApp()),
-    );
+void main() => runApp(const ProviderScope(child: RiverpodEffectsApp()));
 
 class RiverpodEffectsApp extends StatelessWidget {
   const RiverpodEffectsApp({super.key});

@@ -17,8 +17,7 @@ class LoginViewModel extends _$LoginViewModel
     await Future.delayed(const Duration(seconds: 1));
     state = state.copyWith(isLoading: false);
 
-    final success =
-        state.username == 'admin' && state.password == 'admin';
+    final success = state.username == 'admin' && state.password == 'admin';
 
     if (success) {
       emitEffect(const ShowSnackBar('Login Successful'));

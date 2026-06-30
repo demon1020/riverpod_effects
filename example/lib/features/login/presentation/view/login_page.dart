@@ -21,9 +21,9 @@ class LoginPage extends ConsumerWidget {
           case NavigateHome():
             context.go('/home');
           case ShowSnackBar(message: final msg):
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(msg)));
         }
       },
       builder: (context) {
@@ -54,8 +54,7 @@ class LoginPage extends ConsumerWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed:
-                        state.isLoading ? null : () => notifier.login(),
+                    onPressed: state.isLoading ? null : () => notifier.login(),
                     child: state.isLoading
                         ? const SizedBox(
                             height: 20,

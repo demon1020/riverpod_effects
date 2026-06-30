@@ -12,14 +12,13 @@ Widget _consumer(
   Stream<_E> stream,
   void Function(BuildContext, _E) listener,
   WidgetBuilder builder,
-) =>
-    MaterialApp(
-      home: EffectConsumer<_E>(
-        stream: stream,
-        listener: listener,
-        builder: builder,
-      ),
-    );
+) => MaterialApp(
+  home: EffectConsumer<_E>(
+    stream: stream,
+    listener: listener,
+    builder: builder,
+  ),
+);
 
 void main() {
   group('EffectConsumer', () {
@@ -27,11 +26,13 @@ void main() {
       final c = StreamController<_E>.broadcast();
       final delivered = <_E>[];
 
-      await tester.pumpWidget(_consumer(
-        c.stream,
-        (_, e) => delivered.add(e),
-        (_) => const SizedBox(),
-      ));
+      await tester.pumpWidget(
+        _consumer(
+          c.stream,
+          (_, e) => delivered.add(e),
+          (_) => const SizedBox(),
+        ),
+      );
 
       c.add(const _E());
       await tester.pump();
@@ -43,11 +44,9 @@ void main() {
     testWidgets('builder renders child widget', (tester) async {
       final c = StreamController<_E>.broadcast();
 
-      await tester.pumpWidget(_consumer(
-        c.stream,
-        (_, _) {},
-        (_) => const Text('child'),
-      ));
+      await tester.pumpWidget(
+        _consumer(c.stream, (_, _) {}, (_) => const Text('child')),
+      );
 
       expect(find.text('child'), findsOneWidget);
       await c.close();
@@ -57,11 +56,13 @@ void main() {
       final c = StreamController<_E>.broadcast();
       final delivered = <_E>[];
 
-      await tester.pumpWidget(_consumer(
-        c.stream,
-        (_, e) => delivered.add(e),
-        (_) => const SizedBox(),
-      ));
+      await tester.pumpWidget(
+        _consumer(
+          c.stream,
+          (_, e) => delivered.add(e),
+          (_) => const SizedBox(),
+        ),
+      );
 
       c.add(const _E());
       c.add(const _E());
@@ -74,11 +75,9 @@ void main() {
     testWidgets('cancels subscription on unmount', (tester) async {
       final c = StreamController<_E>.broadcast();
 
-      await tester.pumpWidget(_consumer(
-        c.stream,
-        (_, _) {},
-        (_) => const SizedBox(),
-      ));
+      await tester.pumpWidget(
+        _consumer(c.stream, (_, _) {}, (_) => const SizedBox()),
+      );
 
       await tester.pumpWidget(const SizedBox());
       expect(() => c.add(const _E()), returnsNormally);
