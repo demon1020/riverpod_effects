@@ -1,8 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-import 'login_effect.dart';
-import 'login_state.dart';
+import '../state/login_effect.dart';
+import '../state/login_state.dart';
 
 part 'login_view_model.g.dart';
 

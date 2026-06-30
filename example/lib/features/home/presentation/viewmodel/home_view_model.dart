@@ -1,9 +1,8 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-import 'home_effect.dart';
-import 'home_entity.dart';
-import 'home_state.dart';
+import '../state/home_effect.dart';
+import '../state/home_state.dart';
 
 part 'home_view_model.g.dart';
 
@@ -18,9 +17,7 @@ class HomeViewModel extends _$HomeViewModel
   Future<HomeState> _homeState() async {
     await Future.delayed(const Duration(seconds: 1));
     return const HomeState(
-      homeState: AsyncValue.data(
-        HomeEntity(greeting: 'Welcome to the Home Page!'),
-      ),
+      homeState: AsyncValue.data('Welcome to the Home Page!'),
     );
   }
 
@@ -30,9 +27,7 @@ class HomeViewModel extends _$HomeViewModel
       await Future.delayed(const Duration(seconds: 1));
       state = AsyncValue.data(
         const HomeState(
-          homeState: AsyncValue.data(
-            HomeEntity(greeting: 'Welcome to the Home Page!'),
-          ),
+          homeState: AsyncValue.data('Welcome to the Home Page!'),
         ),
       );
       emitEffect(const ShowHomeSnackBar('Home loaded successfully'));

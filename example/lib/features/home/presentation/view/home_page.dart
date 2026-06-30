@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-import 'home_effect.dart';
-import 'home_view_model.dart';
+import '../state/home_effect.dart';
+import '../viewmodel/home_view_model.dart';
 
 class HomePage extends ConsumerWidget {
   const HomePage({super.key});
@@ -65,11 +65,11 @@ class HomePage extends ConsumerWidget {
                   ),
                 ],
               ),
-              data: (entity) => Column(
+              data: (value) => Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    entity.greeting,
+                    value,
                     style: const TextStyle(fontSize: 24),
                   ),
                   const SizedBox(height: 32),

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import 'features/home/presentation/home_page.dart';
-import 'features/login/presentation/login_page.dart';
+import 'features/home/presentation/view/home_page.dart';
+import 'features/login/presentation/view/login_page.dart';
 
 final goRouter = GoRouter(
   initialLocation: '/login',

@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-import 'login_effect.dart';
-import 'login_view_model.dart';
+import '../state/login_effect.dart';
+import '../viewmodel/login_view_model.dart';
 
 class LoginPage extends ConsumerWidget {
   const LoginPage({super.key});

@@ -14,7 +14,7 @@ T _$identity<T>(T value) => value;
 /// @nodoc
 mixin _$HomeState {
 
- AsyncValue<HomeEntity> get homeState;
+ AsyncValue<String> get homeState;
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
 @JsonKey(includeFromJson: false, includeToJson: false)
@@ -45,7 +45,7 @@ abstract mixin class $HomeStateCopyWith<$Res>  {
   factory $HomeStateCopyWith(HomeState value, $Res Function(HomeState) _then) = _$HomeStateCopyWithImpl;
 @useResult
 $Res call({
- AsyncValue<HomeEntity> homeState
+ AsyncValue<String> homeState
 });
 
 
@@ -65,7 +65,7 @@ class _$HomeStateCopyWithImpl<$Res>
 @pragma('vm:prefer-inline') @override $Res call({Object? homeState = null,}) {
   return _then(_self.copyWith(
 homeState: null == homeState ? _self.homeState : homeState // ignore: cast_nullable_to_non_nullable
-as AsyncValue<HomeEntity>,
+as AsyncValue<String>,
   ));
 }
 
@@ -147,7 +147,7 @@ return $default(_that);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AsyncValue<HomeEntity> homeState)?  $default,{required TResult orElse(),}) {final _that = this;
+@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( AsyncValue<String> homeState)?  $default,{required TResult orElse(),}) {final _that = this;
 switch (_that) {
 case _HomeState() when $default != null:
 return $default(_that.homeState);case _:
@@ -168,7 +168,7 @@ return $default(_that.homeState);case _:
 /// }
 /// ```
 
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AsyncValue<HomeEntity> homeState)  $default,) {final _that = this;
+@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( AsyncValue<String> homeState)  $default,) {final _that = this;
 switch (_that) {
 case _HomeState():
 return $default(_that.homeState);}
@@ -185,7 +185,7 @@ return $default(_that.homeState);}
 /// }
 /// ```
 
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AsyncValue<HomeEntity> homeState)?  $default,) {final _that = this;
+@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( AsyncValue<String> homeState)?  $default,) {final _that = this;
 switch (_that) {
 case _HomeState() when $default != null:
 return $default(_that.homeState);case _:
@@ -200,10 +200,10 @@ return $default(_that.homeState);case _:
 
 
 class _HomeState implements HomeState {
-  const _HomeState({this.homeState = const AsyncValue<HomeEntity>.loading()});
+  const _HomeState({this.homeState = const AsyncValue<String>.loading()});
   
 
-@override@JsonKey() final  AsyncValue<HomeEntity> homeState;
+@override@JsonKey() final  AsyncValue<String> homeState;
 
 /// Create a copy of HomeState
 /// with the given fields replaced by the non-null parameter values.
@@ -235,7 +235,7 @@ abstract mixin class _$HomeStateCopyWith<$Res> implements $HomeStateCopyWith<$Re
   factory _$HomeStateCopyWith(_HomeState value, $Res Function(_HomeState) _then) = __$HomeStateCopyWithImpl;
 @override @useResult
 $Res call({
- AsyncValue<HomeEntity> homeState
+ AsyncValue<String> homeState
 });
 
 
@@ -255,7 +255,7 @@ class __$HomeStateCopyWithImpl<$Res>
 @override @pragma('vm:prefer-inline') $Res call({Object? homeState = null,}) {
   return _then(_HomeState(
 homeState: null == homeState ? _self.homeState : homeState // ignore: cast_nullable_to_non_nullable
-as AsyncValue<HomeEntity>,
+as AsyncValue<String>,
   ));
 }
 
