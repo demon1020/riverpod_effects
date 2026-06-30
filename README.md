@@ -1,5 +1,9 @@
 # riverpod_effects
 
+<p align="center">
+  <img src="assets/logo.svg" alt="riverpod_effects logo" width="160">
+</p>
+
 One-time side effects for Riverpod notifiers.
 
 Use `riverpod_effects` for UI events that should not live in notifier state:

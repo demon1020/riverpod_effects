@@ -1,0 +1,19 @@
+<svg width="320" height="320" viewBox="0 0 320 320" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title desc">
+  <title id="title">riverpod_effects logo</title>
+  <desc id="desc">A Riverpod-inspired blue pod mark with an orange one-time effect pulse.</desc>
+  <rect width="320" height="320" rx="72" fill="#F8FAFC"/>
+  <circle cx="160" cy="160" r="128" fill="#E0F2FE"/>
+  <circle cx="160" cy="160" r="104" fill="#38BDF8"/>
+  <circle cx="160" cy="160" r="82" fill="#0284C7"/>
+  <path d="M93 168C104 126 142 95 187 95C202 95 216 98 229 105" stroke="#F8FAFC" stroke-width="19" stroke-linecap="round"/>
+  <path d="M226 102L204 101L209 123" stroke="#F8FAFC" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M222 151C214 195 176 228 130 228C116 228 102 225 90 219" stroke="#BAE6FD" stroke-width="19" stroke-linecap="round"/>
+  <path d="M91 219L113 220L108 198" stroke="#BAE6FD" stroke-width="19" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="160" cy="160" r="38" fill="#F8FAFC"/>
+  <path d="M139 160H181" stroke="#0284C7" stroke-width="14" stroke-linecap="round"/>
+  <path d="M160 139V181" stroke="#0284C7" stroke-width="14" stroke-linecap="round"/>
+  <circle cx="238" cy="92" r="24" fill="#FB923C"/>
+  <circle cx="238" cy="92" r="42" stroke="#FB923C" stroke-width="10" stroke-opacity="0.28"/>
+  <path d="M237 76V92L249 101" stroke="#FFF7ED" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M74 254H246" stroke="#0F172A" stroke-width="18" stroke-linecap="round" stroke-opacity="0.08"/>
+</svg>
