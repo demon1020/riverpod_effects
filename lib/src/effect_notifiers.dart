@@ -25,7 +25,7 @@ abstract class EffectsNotifier<E extends UiEffect, T> extends Notifier<T>
   T build();
 }
 
-/// An [AsyncNotifier] with built-in effect support via [AsyncEffectMixin].
+/// An [AsyncNotifier] with built-in effect support via [EffectMixin].
 ///
 /// No manual initialization needed.
 ///
@@ -41,7 +41,7 @@ abstract class EffectsNotifier<E extends UiEffect, T> extends Notifier<T>
 /// ```
 abstract class AsyncEffectsNotifier<E extends UiEffect, T>
     extends AsyncNotifier<T>
-    with AsyncEffectMixin<E, T> {
+    with EffectMixin<E, T> {
   @override
   FutureOr<T> build();
 }

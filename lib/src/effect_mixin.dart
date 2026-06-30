@@ -6,12 +6,13 @@ import 'effect.dart';
 import 'effect_emitter.dart';
 import 'effect_notifier.dart';
 
-/// A mixin that adds effect-emitting capability to a sync [Notifier].
+/// A mixin that adds effect-emitting capability to any Riverpod notifier
+/// (both sync [Notifier] and [AsyncNotifier]).
 ///
 /// The effect stream is **automatically disposed** when the notifier is
 /// disposed — no manual initialization needed.
 ///
-/// ## Usage
+/// ## Usage with sync notifier
 ///
 /// ```dart
 /// @riverpod
@@ -23,79 +24,39 @@ import 'effect_notifier.dart';
 /// }
 /// ```
 ///
-/// For [AsyncNotifier] use [AsyncEffectMixin].
-mixin EffectMixin<E extends UiEffect, T> on AnyNotifier<T, T>
-    implements EffectNotifier<E> {
-  final EffectEmitter<E> _emitter = EffectEmitter<E>();
-
-  @override
-  void Function(void Function())? runBuild() {
-    super.runBuild();
-    ref.onDispose(_emitter.dispose);
-    return null;
-  }
-
-  @override
-  Stream<E> get effects => _emitter.stream;
-
-  /// Whether at least one listener is currently subscribed.
-  bool get hasListener => _emitter.hasListener;
-
-  /// Emits a one-time effect to all current and future listeners.
-  void emitEffect(E effect) => _emitter.emit(effect);
-
-  /// Subscribes to the effect stream from non-widget code.
-  StreamSubscription<E> listen(
-    void Function(E) onData, {
-    Function? onError,
-    void Function()? onDone,
-    bool? cancelOnError,
-  }) =>
-      _emitter.listen(
-        onData,
-        onError: onError,
-        onDone: onDone,
-        cancelOnError: cancelOnError,
-      );
-}
-
-/// A mixin that adds effect-emitting capability to an [AsyncNotifier].
-///
-/// The effect stream is **automatically disposed** when the notifier is
-/// disposed — no manual initialization needed.
-///
-/// ## Usage
+/// ## Usage with async notifier
 ///
 /// ```dart
 /// @riverpod
-/// class MyViewModel extends _$MyViewModel
-///     with AsyncEffectMixin<MyEffect, MyState> {
+/// class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, MyState> {
 ///   @override
 ///   Future<MyState> build() async => await fetchMyState();
 ///
-///   void refresh() => emitEffect(const Refreshed());
+///   void save() => emitEffect(const Saved());
 /// }
 /// ```
-mixin AsyncEffectMixin<E extends UiEffect, T>
-    on AnyNotifier<AsyncValue<T>, T>
-    implements EffectNotifier<E> {
-  final EffectEmitter<E> _emitter = EffectEmitter<E>();
+mixin EffectMixin<E extends UiEffect, T> implements EffectNotifier<E> {
+  EffectEmitter<E>? _emitter;
 
-  @override
-  void Function(void Function())? runBuild() {
-    super.runBuild();
-    ref.onDispose(_emitter.dispose);
-    return null;
+  /// The [Ref] provided by the Riverpod notifier.
+  Ref get ref;
+
+  EffectEmitter<E> get _safeEmitter {
+    if (_emitter == null) {
+      _emitter = EffectEmitter<E>();
+      ref.onDispose(_emitter!.dispose);
+    }
+    return _emitter!;
   }
 
   @override
-  Stream<E> get effects => _emitter.stream;
+  Stream<E> get effects => _safeEmitter.stream;
 
   /// Whether at least one listener is currently subscribed.
-  bool get hasListener => _emitter.hasListener;
+  bool get hasListener => _emitter?.hasListener ?? false;
 
   /// Emits a one-time effect to all current and future listeners.
-  void emitEffect(E effect) => _emitter.emit(effect);
+  void emitEffect(E effect) => _emitter?.emit(effect);
 
   /// Subscribes to the effect stream from non-widget code.
   StreamSubscription<E> listen(
@@ -104,10 +65,10 @@ mixin AsyncEffectMixin<E extends UiEffect, T>
     void Function()? onDone,
     bool? cancelOnError,
   }) =>
-      _emitter.listen(
+      _safeEmitter.listen(
         onData,
         onError: onError,
         onDone: onDone,
-        cancelOnError: cancelOnError,
+        cancelOnError: cancelOnError ?? false,
       );
 }

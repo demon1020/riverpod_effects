@@ -9,7 +9,7 @@ part 'home_view_model.g.dart';
 
 @riverpod
 class HomeViewModel extends _$HomeViewModel
-    with AsyncEffectMixin<HomeEffect, HomeState> {
+    with EffectMixin<HomeEffect, HomeState> {
   @override
   Future<HomeState> build() async {
     return _homeState();

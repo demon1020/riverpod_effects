@@ -16,7 +16,7 @@ class _N extends Notifier<int> with EffectMixin<_E, int> {
 final _provider = NotifierProvider<_N, int>(_N.new);
 
 // AsyncNotifier
-class _AN extends AsyncNotifier<int> with AsyncEffectMixin<_E, int> {
+class _AN extends AsyncNotifier<int> with EffectMixin<_E, int> {
   @override
   Future<int> build() async => 0;
   void trigger() => emitEffect(const _E());
