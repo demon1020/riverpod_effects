@@ -7,6 +7,9 @@ import 'effect_mixin.dart';
 
 /// A [Notifier] with built-in effect support via [EffectMixin].
 ///
+/// This is a convenience base class for manual providers. Generated notifiers
+/// can use [EffectMixin] directly.
+///
 /// No manual initialization needed.
 ///
 /// ```dart
@@ -26,6 +29,9 @@ abstract class EffectsNotifier<E extends UiEffect, T> extends Notifier<T>
 }
 
 /// An [AsyncNotifier] with built-in effect support via [EffectMixin].
+///
+/// This is a convenience base class for manual providers. Generated async
+/// notifiers can use [EffectMixin] directly.
 ///
 /// No manual initialization needed.
 ///

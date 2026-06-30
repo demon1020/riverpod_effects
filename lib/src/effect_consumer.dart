@@ -16,7 +16,10 @@ import 'effect_listener.dart';
 ///   listener: (context, effect) {
 ///     switch (effect) {
 ///       case NavigateHome(): context.go('/home');
-///       case ShowSnackBar(msg: final m): showSnackBar(SnackBar(content: Text(m)));
+///       case ShowSnackBar(message: final m):
+///         ScaffoldMessenger.of(context).showSnackBar(
+///           SnackBar(content: Text(m)),
+///         );
 ///     }
 ///   },
 ///   builder: (context) => Scaffold(/* ... */),

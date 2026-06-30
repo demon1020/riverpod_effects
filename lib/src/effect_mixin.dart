@@ -7,8 +7,13 @@ import 'effect.dart';
 import 'effect_emitter.dart';
 import 'effect_notifier.dart';
 
-/// A mixin that adds effect-emitting capability to any Riverpod notifier
-/// (both sync [Notifier] and [AsyncNotifier]).
+/// A mixin that adds effect-emitting capability to Riverpod notifiers.
+///
+/// Use the same mixin for both sync [Notifier] and [AsyncNotifier] classes.
+/// The second type parameter, [T], is the notifier state type:
+///
+/// - `EffectMixin<MyEffect, MyState>` for `Notifier<MyState>`.
+/// - `EffectMixin<MyEffect, MyState>` for `AsyncNotifier<MyState>`.
 ///
 /// The effect stream is **automatically disposed** when the notifier is
 /// disposed — no manual initialization needed.
@@ -71,7 +76,10 @@ mixin EffectMixin<E extends UiEffect, T> implements EffectNotifier<E> {
   /// Whether at least one listener is currently subscribed.
   bool get hasListener => _emitter?.hasListener ?? false;
 
-  /// Emits a one-time effect to all current and future listeners.
+  /// Emits a one-time effect to current listeners.
+  ///
+  /// If [createEffectEmitter] returns an emitter with replay enabled, the
+  /// effect is also buffered for late listeners.
   void emitEffect(E effect) {
     _initEmitter();
     _emitter!.emit(effect);

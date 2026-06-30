@@ -1,10 +1,13 @@
 # riverpod_effects
 
-One-time side effects (navigation, snackbars, dialogs) for Riverpod.
+One-time side effects for Riverpod notifiers.
 
-Emit ephemeral UI events without storing them in your notifier state. Effects
-are delivered exactly once, never cause rebuilds, and are automatically cleaned
-up when the notifier is disposed.
+Use `riverpod_effects` for UI events that should not live in notifier state:
+navigation, snackbars, dialogs, permission prompts, haptics, analytics triggers,
+and similar ephemeral actions.
+
+Effects are delivered through a stream, so they do not rebuild widgets and they
+are cleaned up automatically with the notifier lifecycle.
 
 ---
 
@@ -12,7 +15,7 @@ up when the notifier is disposed.
 
 - Dart SDK `>=3.8.0 <4.0.0`
 - Flutter SDK `>=3.32.0`
-- Riverpod 3.0+
+- Riverpod `^3.0.3`
 - Platforms: Android, iOS, Linux, macOS, Web, Windows
 
 ---
@@ -24,82 +27,109 @@ dependencies:
   riverpod_effects: ^1.0.0
 ```
 
+If your UI uses `ConsumerWidget`, `ConsumerStatefulWidget`, or `WidgetRef`, also
+add `flutter_riverpod` in your app.
+
 ---
 
-## Quick start
+## Quick Start
 
-### 1. Define your effects
+### 1. Define Effects
+
+Effects are plain Dart classes. A sealed hierarchy keeps UI handling exhaustive.
 
 ```dart
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-sealed class MyEffect extends UiEffect {
-  const MyEffect();
+sealed class LoginEffect extends UiEffect {
+  const LoginEffect();
 }
 
-class ShowSnackBar extends MyEffect {
+class ShowSnackBar extends LoginEffect {
   final String message;
+
   const ShowSnackBar(this.message);
 }
 
-class NavigateHome extends MyEffect {
+class NavigateHome extends LoginEffect {
   const NavigateHome();
 }
 ```
 
-### 2. Add the mixin to your notifier
+### 2. Emit Effects From a Notifier
+
+Add `EffectMixin<EffectType, StateType>` to a generated Riverpod notifier.
+The same mixin works with both sync `Notifier<T>` and `AsyncNotifier<T>`
+classes.
 
 ```dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-part 'my_view_model.g.dart';
+part 'login_view_model.g.dart';
 
 @riverpod
-class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
+class LoginViewModel extends _$LoginViewModel
+    with EffectMixin<LoginEffect, LoginState> {
   @override
-  int build() => 0;
+  LoginState build() => const LoginState();
 
-  void save() {
-    emitEffect(const ShowSnackBar('Saved!'));
-    emitEffect(const NavigateHome());
+  Future<void> login() async {
+    state = state.copyWith(isLoading: true);
+
+    final success = await authenticate(state.username, state.password);
+
+    state = state.copyWith(isLoading: false);
+
+    if (success) {
+      emitEffect(const ShowSnackBar('Login successful'));
+      emitEffect(const NavigateHome());
+    } else {
+      emitEffect(const ShowSnackBar('Invalid credentials'));
+    }
   }
 }
 ```
 
-The second type parameter (`int`) matches your notifier's state type.
+The second type parameter must match the notifier state type:
 
-### 3. Listen in the UI
+- For `Notifier<LoginState>`, use `EffectMixin<LoginEffect, LoginState>`.
+- For `AsyncNotifier<User>`, use `EffectMixin<MyEffect, User>`.
+
+### 3. Handle Effects in the UI
+
+Use `EffectConsumer` when the same widget both listens to effects and builds UI.
 
 ```dart
-class MyPage extends ConsumerWidget {
-  const MyPage({super.key});
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:riverpod_effects/riverpod_effects.dart';
+
+class LoginPage extends ConsumerWidget {
+  const LoginPage({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final notifier = ref.read(myViewModelProvider.notifier);
-    final state = ref.watch(myViewModelProvider);
+    final state = ref.watch(loginViewModelProvider);
+    final notifier = ref.read(loginViewModelProvider.notifier);
 
-    return EffectConsumer<MyEffect>(
+    return EffectConsumer<LoginEffect>(
       stream: notifier.effects,
       listener: (context, effect) {
         switch (effect) {
           case NavigateHome():
             context.go('/home');
-          case ShowSnackBar(message: final msg):
+          case ShowSnackBar(message: final message):
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(msg)),
+              SnackBar(content: Text(message)),
             );
         }
       },
       builder: (context) {
-        return Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () => notifier.save(),
-              child: Text('Save ($state)'),
-            ),
-          ),
+        return ElevatedButton(
+          onPressed: state.isLoading ? null : notifier.login,
+          child: const Text('Login'),
         );
       },
     );
@@ -107,87 +137,292 @@ class MyPage extends ConsumerWidget {
 }
 ```
 
----
-
-## How it works
-
-```
-UI
- │
- ▼
-EffectConsumer        ← subscribes to notifier.effects
- │
- ▼
-EffectListener       ← manages stream lifecycle (subscribe / cancel)
- │
- ▼
-notifier.effects     ← broadcast stream from EffectMixin
- │
- ▲
- emitEffect()        ← called from notifier methods
- │
-EffectMixin          ← mixed into your notifier (auto-disposed)
-```
-
-- Effects are delivered **exactly once** per listener.
-- Effects **never rebuild the UI** — they are not part of state.
-- Effects are delivered in **FIFO** order.
-- Stream errors are caught and reported via `FlutterError` (they never crash the
-  widget tree).
+Read the notifier with `ref.read(provider.notifier)` for the effect stream. Watch
+the provider state separately with `ref.watch(provider)`.
 
 ---
 
-## API
+## API Overview
 
-| Class | Purpose |
-|-------|---------|
-| `UiEffect` | Base class for every effect. |
-| `EffectMixin<E, T>` | Mixin for any Riverpod notifier (sync or async). Provides `emitEffect()`, `effects`, `hasListener`, `listen()`. Lifecycle is automatic. |
-| `EffectsNotifier<E, T>` | Base class extending `Notifier<T>` with effect support pre-applied. |
-| `AsyncEffectsNotifier<E, T>` | Base class extending `AsyncNotifier<T>` with effect support pre-applied. |
-| `EffectConsumer<E>` | Widget that listens to effects and builds UI. |
-| `EffectListener<E>` | Low-level stateful widget that subscribes to an effect stream. |
-| `EffectEmitter<E>` | Stream-based emitter. Supports optional `replay` of past effects. |
+| API | Purpose |
+| --- | --- |
+| `UiEffect` | Base class for app-defined effects. |
+| `EffectMixin<E, T>` | Adds `effects`, `emitEffect`, `hasListener`, `listen`, and automatic disposal to both `Notifier<T>` and `AsyncNotifier<T>`. |
+| `EffectsNotifier<E, T>` | Base class for a sync `Notifier<T>` with effect support already mixed in. |
+| `AsyncEffectsNotifier<E, T>` | Base class for an `AsyncNotifier<T>` with effect support already mixed in. |
+| `EffectConsumer<E>` | Widget that subscribes to an effect stream and builds a subtree. |
+| `EffectListener<E>` | Lower-level widget that subscribes to an effect stream around an existing child. |
+| `EffectEmitter<E>` | Standalone stream emitter used internally by the mixin and available for custom use. |
+| `EffectNotifier<E>` | Interface for objects exposing a `Stream<E> get effects`. |
 
 ---
 
-## Advanced
+## Notifier Usage
 
-### Replay effects for late listeners
+`EffectMixin` is the primary API and can be mixed into both generated sync
+notifiers and generated async notifiers. The `EffectsNotifier` and
+`AsyncEffectsNotifier` base classes are convenience options for manual providers.
 
-By default, effects emitted before a widget subscribes are lost. Override the
-emitter in your notifier to buffer past effects:
+### Generated Sync Notifier
 
 ```dart
-class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
+@riverpod
+class CounterViewModel extends _$CounterViewModel
+    with EffectMixin<CounterEffect, int> {
   @override
-  EffectEmitter<MyEffect> createEffectEmitter() =>
-      EffectEmitter<MyEffect>(replay: 5);
+  int build() => 0;
+
+  void increment() {
+    state++;
+    emitEffect(const CounterEffect.changed());
+  }
 }
 ```
 
-### Check if anyone is listening
+### Generated Async Notifier
+
+```dart
+@riverpod
+class ProfileViewModel extends _$ProfileViewModel
+    with EffectMixin<ProfileEffect, Profile> {
+  @override
+  Future<Profile> build() => fetchProfile();
+
+  Future<void> refreshProfile() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(fetchProfile);
+    emitEffect(const ProfileEffect.refreshed());
+  }
+}
+```
+
+### Manual Provider With `EffectsNotifier`
+
+Use `EffectsNotifier` when you are not using code generation.
+
+```dart
+import 'package:riverpod/riverpod.dart';
+import 'package:riverpod_effects/riverpod_effects.dart';
+
+final counterProvider = NotifierProvider<CounterNotifier, int>(
+  CounterNotifier.new,
+);
+
+class CounterNotifier extends EffectsNotifier<CounterEffect, int> {
+  @override
+  int build() => 0;
+
+  void increment() {
+    state++;
+    emitEffect(const CounterEffect.changed());
+  }
+}
+```
+
+### Manual Provider With `AsyncEffectsNotifier`
+
+```dart
+final profileProvider =
+    AsyncNotifierProvider<ProfileNotifier, Profile>(ProfileNotifier.new);
+
+class ProfileNotifier extends AsyncEffectsNotifier<ProfileEffect, Profile> {
+  @override
+  Future<Profile> build() => fetchProfile();
+
+  Future<void> refreshProfile() async {
+    state = const AsyncLoading();
+    state = await AsyncValue.guard(fetchProfile);
+    emitEffect(const ProfileEffect.refreshed());
+  }
+}
+```
+
+---
+
+## Widget Usage
+
+### `EffectConsumer`
+
+`EffectConsumer` is the usual choice for pages and feature widgets.
+
+```dart
+EffectConsumer<LoginEffect>(
+  stream: ref.read(loginViewModelProvider.notifier).effects,
+  listener: (context, effect) {
+    switch (effect) {
+      case ShowSnackBar(message: final message):
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message)),
+        );
+      case NavigateHome():
+        context.go('/home');
+    }
+  },
+  builder: (context) => const LoginForm(),
+);
+```
+
+### `EffectListener`
+
+Use `EffectListener` when you already have a child widget and only need to wrap
+it with an effect subscription.
+
+```dart
+EffectListener<LoginEffect>(
+  stream: ref.read(loginViewModelProvider.notifier).effects,
+  listener: (context, effect) {
+    if (effect case ShowSnackBar(message: final message)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
+  },
+  child: const LoginForm(),
+);
+```
+
+`EffectListener` subscribes in `initState`, resubscribes when the `stream`
+instance changes, cancels in `dispose`, and reports stream errors through
+`FlutterError.reportError`.
+
+---
+
+## Replay
+
+By default, effects emitted before a listener subscribes are not delivered to
+that listener. Enable replay when late subscribers should receive the most
+recent effects.
+
+```dart
+class LoginViewModel extends _$LoginViewModel
+    with EffectMixin<LoginEffect, LoginState> {
+  @override
+  LoginState build() => const LoginState();
+
+  @override
+  EffectEmitter<LoginEffect> createEffectEmitter() {
+    return EffectEmitter<LoginEffect>(replay: 1);
+  }
+}
+```
+
+Replay behavior:
+
+- `replay: 0` is the default and stores no past effects.
+- `replay: 1` stores the latest effect.
+- `replay: 5` stores the latest five effects.
+- Replayed streams are broadcast streams, so multiple listeners can subscribe.
+- Effects are delivered in FIFO order.
+
+Use replay sparingly. Most UI events, especially navigation, should usually be
+handled only by listeners that are currently mounted.
+
+---
+
+## Non-Widget Listeners
+
+Use `listen` when another service, test, or notifier needs to observe effects.
+Cancel the subscription when it is no longer needed.
+
+```dart
+final notifier = container.read(loginViewModelProvider.notifier);
+
+final subscription = notifier.listen(
+  (effect) {
+    // Handle the effect.
+  },
+  onError: (error, stackTrace) {
+    // Optional stream error handling.
+  },
+);
+
+await subscription.cancel();
+```
+
+---
+
+## Standalone `EffectEmitter`
+
+You can use `EffectEmitter` directly outside Riverpod when you only need a small
+broadcast effect stream.
+
+```dart
+final emitter = EffectEmitter<LoginEffect>(replay: 2);
+
+final subscription = emitter.listen((effect) {
+  // Handle effect.
+});
+
+emitter.emit(const ShowSnackBar('Saved'));
+
+await subscription.cancel();
+emitter.dispose();
+```
+
+`emit` is a no-op after `dispose`, which makes cleanup-safe calls harmless.
+
+---
+
+## Lifecycle and Delivery Guarantees
+
+- Effects are separate from state and never trigger provider rebuilds by
+  themselves.
+- Each active listener receives each emitted effect once.
+- Multiple active listeners each receive the same emitted effect.
+- Effects are delivered in the order they are emitted.
+- The emitter is created lazily on first use.
+- `EffectMixin` registers emitter disposal with `ref.onDispose`.
+- `hasListener` is `true` when at least one listener is currently subscribed.
+- Widget listeners catch stream errors and report them with `FlutterError`.
+
+---
+
+## Common Patterns
+
+### Avoid Storing Effects in State
+
+Prefer this:
+
+```dart
+emitEffect(const ShowSnackBar('Saved'));
+```
+
+Instead of this:
+
+```dart
+state = state.copyWith(snackBarMessage: 'Saved');
+```
+
+State should represent durable UI data. Effects should represent one-time
+actions.
+
+### Check for Active Listeners
 
 ```dart
 if (hasListener) {
-  emitEffect(const ExpensiveEffect());
+  emitEffect(const StartExpensiveUiWork());
 }
 ```
 
-### Subscribe from non-widget code
+This is optional. Most effects can be emitted without checking.
+
+### Keep Effects UI-Focused
+
+Effects should describe what happened or what the UI should do:
 
 ```dart
-final sub = notifier.listen((effect) {
-  // handle effect in a service or another notifier
-});
-// later: sub.cancel();
+emitEffect(const NavigateHome());
+emitEffect(const ShowSnackBar('Saved'));
+emitEffect(const RequestCameraPermission());
 ```
+
+Avoid putting long-running business logic in an effect listener.
 
 ---
 
-## Example
+## Example App
 
-A complete runnable example is in [`example/`](example/). Run it with:
+A complete runnable example is in [`example/`](example/).
 
 ```bash
 cd example

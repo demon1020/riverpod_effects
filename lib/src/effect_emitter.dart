@@ -7,8 +7,8 @@ import 'effect.dart';
 /// Effects are delivered in **FIFO** order — the order in which [emit] was
 /// called is preserved for every listener.
 ///
-/// By default, listeners only receive effects emitted after they subscribe.
-/// Pass [replay] to buffer past effects for late subscribers.
+/// By default, listeners only receive effects emitted while they are
+/// subscribed. Pass [replay] to buffer past effects for late subscribers.
 class EffectEmitter<E extends UiEffect> {
   final StreamController<E> _controller = StreamController<E>.broadcast();
   final List<E> _history = [];
@@ -26,9 +26,10 @@ class EffectEmitter<E extends UiEffect> {
   /// Whether at least one listener is currently subscribed.
   bool get hasListener => _controller.hasListener;
 
-  /// Emits an effect to all current and future listeners.
+  /// Emits an effect to all current listeners.
   ///
-  /// Has no effect if the emitter has already been [dispose]d.
+  /// When [replay] is greater than zero, the effect is also stored for late
+  /// listeners. Has no effect if the emitter has already been [dispose]d.
   void emit(E effect) {
     if (_controller.isClosed) return;
     if (_maxReplays > 0) {
