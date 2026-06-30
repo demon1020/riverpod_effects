@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:meta/meta.dart';
 import 'package:riverpod/riverpod.dart';
 
 import 'effect.dart';
@@ -41,9 +42,19 @@ mixin EffectMixin<E extends UiEffect, T> implements EffectNotifier<E> {
   /// The [Ref] provided by the Riverpod notifier.
   Ref get ref;
 
+  /// Override to configure the [EffectEmitter], e.g. to enable [replay][EffectEmitter]:
+  ///
+  /// ```dart
+  /// @override
+  /// EffectEmitter<MyEffect> createEffectEmitter() =>
+  ///     EffectEmitter<MyEffect>(replay: 5);
+  /// ```
+  @protected
+  EffectEmitter<E> createEffectEmitter() => EffectEmitter<E>();
+
   EffectEmitter<E> get _safeEmitter {
     if (_emitter == null) {
-      _emitter = EffectEmitter<E>();
+      _emitter = createEffectEmitter();
       ref.onDispose(_emitter!.dispose);
     }
     return _emitter!;

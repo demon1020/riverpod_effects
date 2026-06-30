@@ -5,9 +5,10 @@
   "packages": [
     {
       "name": "riverpod_effects",
-      "version": "0.0.1",
+      "version": "1.0.0",
       "dependencies": [
         "flutter",
+        "meta",
         "riverpod"
       ],
       "devDependencies": [
@@ -55,6 +56,11 @@
       ]
     },
     {
+      "name": "meta",
+      "version": "1.17.0",
+      "dependencies": []
+    },
+    {
       "name": "flutter",
       "version": "0.0.0",
       "dependencies": [
@@ -77,11 +83,6 @@
       "dependencies": [
         "async"
       ]
-    },
-    {
-      "name": "meta",
-      "version": "1.17.0",
-      "dependencies": []
     },
     {
       "name": "collection",

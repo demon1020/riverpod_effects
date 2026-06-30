@@ -11,7 +11,7 @@ class HomeViewModel extends _$HomeViewModel
     with EffectMixin<HomeEffect, HomeState> {
   @override
   Future<HomeState> build() async {
-    return _homeState();
+    return await _homeState();
   }
 
   Future<HomeState> _homeState() async {

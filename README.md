@@ -20,7 +20,7 @@ up when the notifier is disposed.
 
 ```yaml
 dependencies:
-  riverpod_effects: ^0.0.1
+  riverpod_effects: ^1.0.0
 ```
 
 ---
@@ -141,7 +141,9 @@ EffectMixin          ← mixed into your notifier (auto-disposed)
 | Class | Purpose |
 |-------|---------|
 | `UiEffect` | Base class for every effect. |
-| `EffectMixin<E, T>` | Mixin for Riverpod notifiers. Provides `emitEffect()`, `effects`, `hasListener`, `listen()`. Lifecycle is automatic. |
+| `EffectMixin<E, T>` | Mixin for any Riverpod notifier (sync or async). Provides `emitEffect()`, `effects`, `hasListener`, `listen()`. Lifecycle is automatic. |
+| `EffectsNotifier<E, T>` | Base class extending `Notifier<T>` with effect support pre-applied. |
+| `AsyncEffectsNotifier<E, T>` | Base class extending `AsyncNotifier<T>` with effect support pre-applied. |
 | `EffectConsumer<E>` | Widget that listens to effects and builds UI. |
 | `EffectListener<E>` | Low-level stateful widget that subscribes to an effect stream. |
 | `EffectEmitter<E>` | Stream-based emitter. Supports optional `replay` of past effects. |
@@ -157,10 +159,9 @@ emitter in your notifier to buffer past effects:
 
 ```dart
 class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
-  // Override the default emitter (no replay) with one that buffers
-  // the last 5 effects.
   @override
-  final EffectEmitter<MyEffect> _emitter = EffectEmitter<MyEffect>(replay: 5);
+  EffectEmitter<MyEffect> createEffectEmitter() =>
+      EffectEmitter<MyEffect>(replay: 5);
 }
 ```
 
