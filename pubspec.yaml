@@ -1,18 +1,21 @@
 name: riverpod_effects
-description: Bloc-like one-time side effects (navigation, snackbars, dialogs) for Riverpod. Works with Riverpod Generator.
+description: One-time side effects (navigation, snackbars, dialogs) for Riverpod.
 version: 0.0.1
 repository: https://github.com/yourusername/riverpod_effects
-homepage: https://github.com/yourusername/riverpod_effects
-issue_tracker: https://github.com/yourusername/riverpod_effects/issues
-funding:
-  - https://github.com/sponsors/yourusername
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:
 
 topics:
   - riverpod
-  - state-management
   - side-effects
+  - state-management
   - flutter
-  - ui-effects
 
 environment:
   sdk: ">=3.8.0 <4.0.0"

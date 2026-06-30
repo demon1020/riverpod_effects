@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-class _Effect extends UiEffect {
-  const _Effect();
+class _E extends UiEffect {
+  const _E();
 }
 
-Widget _consumerWidget(
-  Stream<_Effect> stream,
-  void Function(BuildContext, _Effect) listener,
+Widget _consumer(
+  Stream<_E> stream,
+  void Function(BuildContext, _E) listener,
   WidgetBuilder builder,
 ) =>
     MaterialApp(
-      home: EffectConsumer<_Effect>(
+      home: EffectConsumer<_E>(
         stream: stream,
         listener: listener,
         builder: builder,
@@ -24,69 +24,66 @@ Widget _consumerWidget(
 void main() {
   group('EffectConsumer', () {
     testWidgets('delivers effects to listener', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
-      final delivered = <_Effect>[];
+      final c = StreamController<_E>.broadcast();
+      final delivered = <_E>[];
 
-      await tester.pumpWidget(_consumerWidget(
-        controller.stream,
-        (_, effect) => delivered.add(effect),
+      await tester.pumpWidget(_consumer(
+        c.stream,
+        (_, e) => delivered.add(e),
         (_) => const SizedBox(),
       ));
 
-      controller.add(const _Effect());
+      c.add(const _E());
       await tester.pump();
       expect(delivered, hasLength(1));
 
-      await controller.close();
+      await c.close();
     });
 
-    testWidgets('builder renders the provided widget', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
+    testWidgets('builder renders child widget', (tester) async {
+      final c = StreamController<_E>.broadcast();
 
-      await tester.pumpWidget(_consumerWidget(
-        controller.stream,
+      await tester.pumpWidget(_consumer(
+        c.stream,
         (_, _) {},
-        (_) => const Text('consumer-child'),
+        (_) => const Text('child'),
       ));
 
-      expect(find.text('consumer-child'), findsOneWidget);
-      await controller.close();
+      expect(find.text('child'), findsOneWidget);
+      await c.close();
     });
 
     testWidgets('handles multiple effects', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
-      final delivered = <_Effect>[];
+      final c = StreamController<_E>.broadcast();
+      final delivered = <_E>[];
 
-      await tester.pumpWidget(_consumerWidget(
-        controller.stream,
-        (_, effect) => delivered.add(effect),
+      await tester.pumpWidget(_consumer(
+        c.stream,
+        (_, e) => delivered.add(e),
         (_) => const SizedBox(),
       ));
 
-      controller.add(const _Effect());
-      controller.add(const _Effect());
+      c.add(const _E());
+      c.add(const _E());
       await tester.pump();
       expect(delivered, hasLength(2));
 
-      await controller.close();
+      await c.close();
     });
 
     testWidgets('cancels subscription on unmount', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
+      final c = StreamController<_E>.broadcast();
 
-      await tester.pumpWidget(_consumerWidget(
-        controller.stream,
+      await tester.pumpWidget(_consumer(
+        c.stream,
         (_, _) {},
         (_) => const SizedBox(),
       ));
 
       await tester.pumpWidget(const SizedBox());
-
-      // Should not throw or leak
-      controller.add(const _Effect());
+      expect(() => c.add(const _E()), returnsNormally);
       await tester.pump();
-
-      await controller.close();
+      await c.close();
     });
   });
 }

@@ -1,10 +1,18 @@
 # riverpod_effects
 
-Bloc-like one-time side effects for Riverpod.
+One-time side effects (navigation, snackbars, dialogs) for Riverpod.
 
-Emit ephemeral UI events — navigation, snackbars, dialogs, permission requests, URL launches — without storing them in your state.
+Emit ephemeral UI events without storing them in your notifier state. Effects
+are delivered exactly once, never cause rebuilds, and are automatically cleaned
+up when the notifier is disposed.
 
-Works with **Riverpod Generator** (`@riverpod`), **Notifier**, and **AsyncNotifier**.
+---
+
+## Requirements
+
+- Dart 3.8+ / Flutter 3.29+
+- Riverpod 3.0+
+- Platforms: Android, iOS, Linux, macOS, Web, Windows
 
 ---
 
@@ -17,11 +25,9 @@ dependencies:
 
 ---
 
-## Quick Start
+## Quick start
 
 ### 1. Define your effects
-
-Create a sealed class extending `UiEffect`:
 
 ```dart
 import 'package:riverpod_effects/riverpod_effects.dart';
@@ -30,19 +36,17 @@ sealed class MyEffect extends UiEffect {
   const MyEffect();
 }
 
-class NavigateToHome extends MyEffect {
-  const NavigateToHome();
-}
-
 class ShowSnackBar extends MyEffect {
   final String message;
   const ShowSnackBar(this.message);
 }
+
+class NavigateHome extends MyEffect {
+  const NavigateHome();
+}
 ```
 
-### 2. Add the mixin to your ViewModel
-
-Mix `EffectMixin<MyEffect, int>` into your Riverpod-generated notifier — the effect stream is automatically disposed when the notifier is disposed:
+### 2. Add the mixin to your notifier
 
 ```dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -55,17 +59,16 @@ class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
   @override
   int build() => 0;
 
-  Future<void> save() async {
-    // ... do work ...
+  void save() {
     emitEffect(const ShowSnackBar('Saved!'));
-    emitEffect(const NavigateToHome());
+    emitEffect(const NavigateHome());
   }
 }
 ```
 
-### 3. Listen in the UI
+The second type parameter (`int`) matches your notifier's state type.
 
-Wrap your widget tree with `EffectConsumer`:
+### 3. Listen in the UI
 
 ```dart
 class MyPage extends ConsumerWidget {
@@ -73,14 +76,14 @@ class MyPage extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final state = ref.watch(myViewModelProvider);
     final notifier = ref.read(myViewModelProvider.notifier);
+    final state = ref.watch(myViewModelProvider);
 
     return EffectConsumer<MyEffect>(
       stream: notifier.effects,
       listener: (context, effect) {
         switch (effect) {
-          case NavigateToHome():
+          case NavigateHome():
             context.go('/home');
           case ShowSnackBar(message: final msg):
             ScaffoldMessenger.of(context).showSnackBar(
@@ -111,24 +114,25 @@ class MyPage extends ConsumerWidget {
 UI
  │
  ▼
-EffectConsumer        ← listens to the effect stream
+EffectConsumer        ← subscribes to notifier.effects
  │
  ▼
-EffectListener        ← subscribes once, cancels on dispose
+EffectListener       ← manages stream lifecycle (subscribe / cancel)
  │
  ▼
-ViewModel.effects     ← broadcast stream from EffectMixin
+notifier.effects     ← broadcast stream from EffectMixin
  │
  ▲
- emitEffect()         ← called from ViewModel methods
+ emitEffect()        ← called from notifier methods
  │
-EffectMixin           ← owned by your ViewModel
+EffectMixin          ← mixed into your notifier (auto-disposed)
 ```
 
 - Effects are delivered **exactly once** per listener.
-- Effects never rebuild the UI — they are **not part of state**.
-- Effects are delivered in **FIFO order**.
-- Stream errors are caught and reported via `FlutterError` (they never crash the widget tree).
+- Effects **never rebuild the UI** — they are not part of state.
+- Effects are delivered in **FIFO** order.
+- Stream errors are caught and reported via `FlutterError` (they never crash the
+  widget tree).
 
 ---
 
@@ -137,10 +141,10 @@ EffectMixin           ← owned by your ViewModel
 | Class | Purpose |
 |-------|---------|
 | `UiEffect` | Base class for every effect. |
-| `EffectMixin<E>` | Mixin for Riverpod ViewModels. Provides `emitEffect()`, `effects`, `disposeEffects()`, `hasListener`, `listen()`, `initEffects(ref)`. |
+| `EffectMixin<E, T>` | Mixin for Riverpod notifiers. Provides `emitEffect()`, `effects`, `hasListener`, `listen()`. Lifecycle is automatic. |
 | `EffectConsumer<E>` | Widget that listens to effects and builds UI. |
 | `EffectListener<E>` | Low-level stateful widget that subscribes to an effect stream. |
-| `EffectEmitter<E>` | Stream-based emitter. Supports optional `replay` of past effects for late listeners. |
+| `EffectEmitter<E>` | Stream-based emitter. Supports optional `replay` of past effects. |
 
 ---
 
@@ -148,13 +152,15 @@ EffectMixin           ← owned by your ViewModel
 
 ### Replay effects for late listeners
 
-By default, effects emitted before a widget subscribes are lost. To buffer past
-effects, pass `replay:` to `EffectEmitter`:
+By default, effects emitted before a widget subscribes are lost. Override the
+emitter in your notifier to buffer past effects:
 
 ```dart
-mixin EffectMixin<E extends UiEffect> {
-  // Override in your notifier to enable replay:
-  final EffectEmitter<E> _emitter = EffectEmitter<E>(replay: 5);
+class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
+  // Override the default emitter (no replay) with one that buffers
+  // the last 5 effects.
+  @override
+  final EffectEmitter<MyEffect> _emitter = EffectEmitter<MyEffect>(replay: 5);
 }
 ```
 
@@ -179,7 +185,7 @@ final sub = notifier.listen((effect) {
 
 ## Example
 
-A complete runnable example is available in the [`example/`](example/) directory:
+A complete runnable example is in [`example/`](example/). Run it with:
 
 ```bash
 cd example

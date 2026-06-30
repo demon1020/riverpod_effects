@@ -4,17 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-class _Effect extends UiEffect {
-  const _Effect();
+class _E extends UiEffect {
+  const _E();
 }
 
-Widget _listenerWidget(
-  Stream<_Effect> stream,
-  void Function(BuildContext, _Effect) listener, {
+Widget _listener(
+  Stream<_E> stream,
+  void Function(BuildContext, _E) listener, {
   Widget child = const SizedBox(),
 }) =>
     MaterialApp(
-      home: EffectListener<_Effect>(
+      home: EffectListener<_E>(
         stream: stream,
         listener: listener,
         child: child,
@@ -24,126 +24,99 @@ Widget _listenerWidget(
 void main() {
   group('EffectListener', () {
     testWidgets('delivers effects to listener', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
-      final delivered = <_Effect>[];
+      final c = StreamController<_E>.broadcast();
+      final delivered = <_E>[];
 
-      await tester.pumpWidget(_listenerWidget(
-        controller.stream,
-        (_, effect) => delivered.add(effect),
+      await tester.pumpWidget(_listener(
+        c.stream,
+        (_, e) => delivered.add(e),
       ));
 
-      controller.add(const _Effect());
+      c.add(const _E());
       await tester.pump();
       expect(delivered, hasLength(1));
 
-      await controller.close();
+      await c.close();
     });
 
     testWidgets('delivers multiple effects in order', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
-      final delivered = <_Effect>[];
+      final c = StreamController<_E>.broadcast();
+      final delivered = <_E>[];
 
-      await tester.pumpWidget(_listenerWidget(
-        controller.stream,
-        (_, effect) => delivered.add(effect),
-      ));
-
-      controller.add(const _Effect());
-      controller.add(const _Effect());
-      controller.add(const _Effect());
+      await tester.pumpWidget(_listener(c.stream, (_, e) => delivered.add(e)));
+      c.add(const _E());
+      c.add(const _E());
+      c.add(const _E());
       await tester.pump();
       expect(delivered, hasLength(3));
 
-      await controller.close();
+      await c.close();
     });
 
-    testWidgets('cancels subscription on unmount — no crash on late emit',
-        (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
+    testWidgets('cancels subscription on unmount — no crash', (tester) async {
+      final c = StreamController<_E>.broadcast();
 
-      await tester.pumpWidget(_listenerWidget(
-        controller.stream,
-        (_, _) {},
-      ));
-
-      // Unmount the listener
+      await tester.pumpWidget(_listener(c.stream, (_, _) {}));
       await tester.pumpWidget(const SizedBox());
 
-      // Should not throw
-      controller.add(const _Effect());
+      expect(() => c.add(const _E()), returnsNormally);
       await tester.pump();
-
-      await controller.close();
+      await c.close();
     });
 
-    testWidgets('re-subscribes when stream reference changes',
-        (tester) async {
-      final controller1 = StreamController<_Effect>.broadcast();
-      final controller2 = StreamController<_Effect>.broadcast();
-      final delivered = <_Effect>[];
+    testWidgets('re-subscribes when stream changes', (tester) async {
+      final c1 = StreamController<_E>.broadcast();
+      final c2 = StreamController<_E>.broadcast();
+      final delivered = <_E>[];
 
-      await tester.pumpWidget(_listenerWidget(
-        controller1.stream,
-        (_, effect) => delivered.add(effect),
-      ));
-
-      controller1.add(const _Effect());
+      await tester.pumpWidget(_listener(c1.stream, (_, e) => delivered.add(e)));
+      c1.add(const _E());
       await tester.pump();
       expect(delivered, hasLength(1));
 
-      // Switch to a different stream
-      await tester.pumpWidget(_listenerWidget(
-        controller2.stream,
-        (_, effect) => delivered.add(effect),
-      ));
+      // Switch stream
+      await tester.pumpWidget(_listener(c2.stream, (_, e) => delivered.add(e)));
 
-      // Old stream events should not reach listener
-      controller1.add(const _Effect());
+      // Old stream ignored
+      c1.add(const _E());
       await tester.pump();
       expect(delivered, hasLength(1));
 
-      // New stream events should reach listener
-      controller2.add(const _Effect());
+      // New stream received
+      c2.add(const _E());
       await tester.pump();
       expect(delivered, hasLength(2));
 
-      await controller1.close();
-      await controller2.close();
+      await c1.close();
+      await c2.close();
     });
 
     testWidgets('renders child widget', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
-
-      await tester.pumpWidget(_listenerWidget(
-        controller.stream,
+      final c = StreamController<_E>.broadcast();
+      await tester.pumpWidget(_listener(
+        c.stream,
         (_, _) {},
-        child: const Text('hello'),
+        child: const Text('child'),
       ));
-
-      expect(find.text('hello'), findsOneWidget);
-      await controller.close();
+      expect(find.text('child'), findsOneWidget);
+      await c.close();
     });
 
-    testWidgets('handles stream errors without crashing', (tester) async {
-      final controller = StreamController<_Effect>.broadcast();
+    testWidgets('reports stream errors without crashing', (tester) async {
+      final c = StreamController<_E>.broadcast();
       final errors = <FlutterErrorDetails>[];
-      final originalOnError = FlutterError.onError;
+      final original = FlutterError.onError;
       FlutterError.onError = errors.add;
 
-      await tester.pumpWidget(_listenerWidget(
-        controller.stream,
-        (_, _) {},
-      ));
-
-      // Should not cause a crash — error is reported via FlutterError
-      controller.addError(Exception('test error'));
+      await tester.pumpWidget(_listener(c.stream, (_, _) {}));
+      c.addError(Exception('fail'));
       await tester.pump();
 
       expect(errors, hasLength(1));
-      expect(errors.first.exceptionAsString(), contains('test error'));
+      expect(errors.first.exceptionAsString(), contains('fail'));
 
-      FlutterError.onError = originalOnError;
-      await controller.close();
+      FlutterError.onError = original;
+      await c.close();
     });
   });
 }

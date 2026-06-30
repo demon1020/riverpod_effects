@@ -2,96 +2,88 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:riverpod_effects/riverpod_effects.dart';
 
-class _TestEffect extends UiEffect {
-  const _TestEffect();
+class _E extends UiEffect {
+  const _E();
 }
 
-class _TestNotifier extends Notifier<int> with EffectMixin<_TestEffect, int> {
+class _N extends Notifier<int> with EffectMixin<_E, int> {
   @override
   int build() => 0;
 
-  void trigger() => emitEffect(const _TestEffect());
+  void trigger() => emitEffect(const _E());
 }
 
-final _testProvider = NotifierProvider<_TestNotifier, int>(
-  _TestNotifier.new,
-);
+final _provider = NotifierProvider<_N, int>(_N.new);
 
 void main() {
   group('EffectMixin', () {
     test('effects stream delivers emitted effects', () async {
-      final container = ProviderContainer(overrides: []);
-      final notifier = container.read(_testProvider.notifier);
+      final container = ProviderContainer();
+      final n = container.read(_provider.notifier);
 
-      final effects = <_TestEffect>[];
-      final sub = notifier.effects.listen(effects.add);
+      final seen = <_E>[];
+      final sub = n.effects.listen(seen.add);
 
-      notifier.trigger();
+      n.trigger();
       await Future(() {});
-      expect(effects, hasLength(1));
+      expect(seen, hasLength(1));
 
       await sub.cancel();
       container.dispose();
     });
 
     test('hasListener reflects subscription', () async {
-      final container = ProviderContainer(overrides: []);
-      final notifier = container.read(_testProvider.notifier);
+      final container = ProviderContainer();
+      final n = container.read(_provider.notifier);
 
-      expect(notifier.hasListener, false);
+      expect(n.hasListener, false);
 
-      final sub = notifier.effects.listen((_) {});
+      final sub = n.effects.listen((_) {});
       await Future(() {});
-      expect(notifier.hasListener, true);
+      expect(n.hasListener, true);
 
       await sub.cancel();
       container.dispose();
     });
 
-    test('listen method subscribes from non-widget code', () async {
-      final container = ProviderContainer(overrides: []);
-      final notifier = container.read(_testProvider.notifier);
+    test('listen subscribes from non-widget code', () async {
+      final container = ProviderContainer();
+      final n = container.read(_provider.notifier);
 
-      final effects = <_TestEffect>[];
-      final sub = notifier.listen(effects.add);
+      final seen = <_E>[];
+      final sub = n.listen(seen.add);
 
-      notifier.trigger();
+      n.trigger();
       await Future(() {});
-      expect(effects, hasLength(1));
+      expect(seen, hasLength(1));
 
       await sub.cancel();
       container.dispose();
     });
 
     test('emit after provider dispose is safe', () async {
-      final container = ProviderContainer(overrides: []);
-      final notifier = container.read(_testProvider.notifier);
+      final container = ProviderContainer();
+      final n = container.read(_provider.notifier);
 
       container.dispose();
-
-      // Should not throw even though the emitter is disposed
-      expect(() => notifier.trigger(), returnsNormally);
+      expect(() => n.trigger(), returnsNormally);
     });
 
-    test('emitter is disposed when provider is disposed', () async {
-      final container = ProviderContainer(overrides: []);
-      final notifier = container.read(_testProvider.notifier);
+    test('emitter is auto-disposed when provider is disposed', () async {
+      final container = ProviderContainer();
+      final n = container.read(_provider.notifier);
 
-      // Verify it works before dispose
-      final effects = <_TestEffect>[];
-      final sub = notifier.effects.listen(effects.add);
+      final seen = <_E>[];
+      final sub = n.effects.listen(seen.add);
       await Future(() {});
 
-      notifier.trigger();
+      n.trigger();
       await Future(() {});
-      expect(effects, hasLength(1));
+      expect(seen, hasLength(1));
 
-      // After dispose, the emitter is auto-cleaned
       await sub.cancel();
       container.dispose();
-
-      // Further emits are no-ops
-      expect(() => notifier.trigger(), returnsNormally);
+      expect(() => n.trigger(), returnsNormally);
     });
   });
 }

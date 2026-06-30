@@ -12,23 +12,16 @@ import 'effect_notifier.dart';
 /// The effect stream is **automatically disposed** when the notifier is
 /// disposed — no manual lifecycle wiring is needed.
 ///
+/// ## Usage
+///
 /// ```dart
 /// @riverpod
 /// class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
 ///   @override
 ///   int build() => 0;
 ///
-///   void save() {
-///     emitEffect(const ShowSnackBar('Saved!'));
-///   }
+///   void save() => emitEffect(const Saved());
 /// }
-///
-/// // In the UI:
-/// EffectConsumer<MyEffect>(
-///   stream: notifier.effects,
-///   listener: (context, effect) { /* ... */ },
-///   builder: (context) => Scaffold(/* ... */),
-/// )
 /// ```
 ///
 /// The second type parameter `T` is the notifier's state type. For a
@@ -52,7 +45,7 @@ mixin EffectMixin<E extends UiEffect, T> on AnyNotifier<T, T>
   ///
   /// Useful for skipping expensive work when no UI is listening:
   /// ```dart
-  /// if (hasListener) emitEffect(ExpensiveEffect());
+  /// if (hasListener) emitEffect(const ExpensiveEffect());
   /// ```
   bool get hasListener => _emitter.hasListener;
 
@@ -60,14 +53,6 @@ mixin EffectMixin<E extends UiEffect, T> on AnyNotifier<T, T>
   void emitEffect(E effect) => _emitter.emit(effect);
 
   /// Subscribes to the effect stream from non-widget code.
-  ///
-  /// Example:
-  /// ```dart
-  /// final sub = notifier.listen((effect) {
-  ///   // handle effect in a service or another notifier
-  /// });
-  /// // later: sub.cancel();
-  /// ```
   StreamSubscription<E> listen(
     void Function(E) onData, {
     Function? onError,
@@ -80,10 +65,4 @@ mixin EffectMixin<E extends UiEffect, T> on AnyNotifier<T, T>
         onDone: onDone,
         cancelOnError: cancelOnError,
       );
-
-  /// Disposes the effect emitter. Idempotent.
-  ///
-  /// Called automatically when the notifier is disposed. You should not
-  /// need to call this manually.
-  void disposeEffects() => _emitter.dispose();
 }
