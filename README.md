@@ -12,7 +12,7 @@ Works with **Riverpod Generator** (`@riverpod`), **Notifier**, and **AsyncNotifi
 
 ```yaml
 dependencies:
-  riverpod_effects: ^0.2.0
+  riverpod_effects: ^0.0.1
 ```
 
 ---
@@ -42,7 +42,7 @@ class ShowSnackBar extends MyEffect {
 
 ### 2. Add the mixin to your ViewModel
 
-Mix `EffectMixin<MyEffect>` into your Riverpod-generated notifier and call `initEffects(ref)` in `build()`:
+Mix `EffectMixin<MyEffect, int>` into your Riverpod-generated notifier — the effect stream is automatically disposed when the notifier is disposed:
 
 ```dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -51,12 +51,9 @@ import 'package:riverpod_effects/riverpod_effects.dart';
 part 'my_view_model.g.dart';
 
 @riverpod
-class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect> {
+class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
   @override
-  int build() {
-    initEffects(ref);    // <-- registers automatic cleanup
-    return 0;
-  }
+  int build() => 0;
 
   Future<void> save() async {
     // ... do work ...

@@ -8,12 +8,9 @@ part 'login_view_model.g.dart';
 
 @riverpod
 class LoginViewModel extends _$LoginViewModel
-    with EffectMixin<LoginEffect> {
+    with EffectMixin<LoginEffect, LoginState> {
   @override
-  LoginState build() {
-    initEffects(ref);
-    return const LoginState();
-  }
+  LoginState build() => const LoginState();
 
   Future<void> login() async {
     state = state.copyWith(isLoading: true);

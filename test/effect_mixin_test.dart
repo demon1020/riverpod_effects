@@ -6,12 +6,9 @@ class _TestEffect extends UiEffect {
   const _TestEffect();
 }
 
-class _TestNotifier extends Notifier<int> with EffectMixin<_TestEffect> {
+class _TestNotifier extends Notifier<int> with EffectMixin<_TestEffect, int> {
   @override
-  int build() {
-    initEffects(ref);
-    return 0;
-  }
+  int build() => 0;
 
   void trigger() => emitEffect(const _TestEffect());
 }
@@ -76,11 +73,11 @@ void main() {
       expect(() => notifier.trigger(), returnsNormally);
     });
 
-    test('initEffects registers dispose on provider cleanup', () async {
+    test('emitter is disposed when provider is disposed', () async {
       final container = ProviderContainer(overrides: []);
       final notifier = container.read(_testProvider.notifier);
 
-      // Capture internal state by subscribing
+      // Verify it works before dispose
       final effects = <_TestEffect>[];
       final sub = notifier.effects.listen(effects.add);
       await Future(() {});
@@ -89,12 +86,11 @@ void main() {
       await Future(() {});
       expect(effects, hasLength(1));
 
+      // After dispose, the emitter is auto-cleaned
       await sub.cancel();
-
-      // After dispose, the controller is closed
       container.dispose();
 
-      // The emitter is disposed; further emits are no-ops
+      // Further emits are no-ops
       expect(() => notifier.trigger(), returnsNormally);
     });
   });

@@ -6,41 +6,43 @@ import 'effect.dart';
 import 'effect_emitter.dart';
 import 'effect_notifier.dart';
 
-/// A mixin that adds effect-emitting capability to a Riverpod notifier.
+/// A mixin that adds effect-emitting capability to a Riverpod [Notifier] or
+/// generated `$Notifier` subclass.
+///
+/// The effect stream is **automatically disposed** when the notifier is
+/// disposed — no manual lifecycle wiring is needed.
 ///
 /// ```dart
 /// @riverpod
-/// class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect> {
+/// class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect, int> {
 ///   @override
-///   int build() {
-///     initEffects(ref);
-///     return 0;
-///   }
+///   int build() => 0;
 ///
 ///   void save() {
 ///     emitEffect(const ShowSnackBar('Saved!'));
 ///   }
 /// }
+///
+/// // In the UI:
+/// EffectConsumer<MyEffect>(
+///   stream: notifier.effects,
+///   listener: (context, effect) { /* ... */ },
+///   builder: (context) => Scaffold(/* ... */),
+/// )
 /// ```
 ///
-/// Call [initEffects] inside `build()` to register automatic cleanup of
-/// the effect stream when the provider is disposed.
-mixin EffectMixin<E extends UiEffect> implements EffectNotifier<E> {
+/// The second type parameter `T` is the notifier's state type. For a
+/// `Notifier<MyState>`, use `EffectMixin<MyEffect, MyState>`. For an
+/// `AsyncNotifier<MyState>`, use `EffectMixin<MyEffect, AsyncValue<MyState>>`.
+mixin EffectMixin<E extends UiEffect, T> on AnyNotifier<T, T>
+    implements EffectNotifier<E> {
   final EffectEmitter<E> _emitter = EffectEmitter<E>();
 
-  /// Initialises the effect lifecycle.
-  ///
-  /// Registers [disposeEffects] to run when the notifier is disposed.
-  /// Call this once inside your `build()` method:
-  /// ```dart
-  /// @override
-  /// int build() {
-  ///   initEffects(ref);
-  ///   return 0;
-  /// }
-  /// ```
-  void initEffects(Ref ref) {
-    ref.onDispose(disposeEffects);
+  @override
+  void Function(void Function())? runBuild() {
+    super.runBuild();
+    ref.onDispose(_emitter.dispose);
+    return null;
   }
 
   @override
@@ -79,8 +81,9 @@ mixin EffectMixin<E extends UiEffect> implements EffectNotifier<E> {
         cancelOnError: cancelOnError,
       );
 
-  /// Disposes the effect emitter.
+  /// Disposes the effect emitter. Idempotent.
   ///
-  /// Called automatically by [initEffects] on provider disposal. Idempotent.
+  /// Called automatically when the notifier is disposed. You should not
+  /// need to call this manually.
   void disposeEffects() => _emitter.dispose();
 }
