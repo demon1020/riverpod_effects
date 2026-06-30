@@ -1,10 +1,10 @@
 name: riverpod_effects
 description: One-time side effects (navigation, snackbars, dialogs) for Riverpod.
 version: 1.0.0
-repository: https://github.com/yourusername/riverpod_effects
-homepage: https://github.com/yourusername/riverpod_effects
-issue_tracker: https://github.com/yourusername/riverpod_effects/issues
-documentation: https://github.com/yourusername/riverpod_effects/tree/main/example
+repository: https://github.com/demon1020/riverpod_effects
+homepage: https://github.com/demon1020/riverpod_effects
+issue_tracker: https://github.com/demon1020/riverpod_effects/issues
+documentation: https://github.com/demon1020/riverpod_effects/tree/main/example
 
 platforms:
   android:
@@ -22,6 +22,7 @@ topics:
 
 environment:
   sdk: ">=3.8.0 <4.0.0"
+  flutter: ">=3.32.0"
 
 dependencies:
   flutter:

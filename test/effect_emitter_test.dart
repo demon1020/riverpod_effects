@@ -98,10 +98,7 @@ void main() {
     test('listen respects cancelOnError: false by default', () async {
       final e = EffectEmitter<_E>();
       final errors = <Object>[];
-      final sub = e.listen(
-        (_) {},
-        onError: (err) => errors.add(err),
-      );
+      final sub = e.listen((_) {}, onError: (err) => errors.add(err));
       await sub.cancel();
       e.dispose();
     });
@@ -119,6 +116,63 @@ void main() {
 
         await sub.cancel();
         e.dispose();
+      });
+
+      test('replay stream remains broadcast', () async {
+        final e = EffectEmitter<_E>(replay: 2);
+        e.emit(const _E());
+
+        final stream = e.stream;
+        expect(stream.isBroadcast, true);
+
+        final a = <_E>[], b = <_E>[];
+        final subA = stream.listen(a.add);
+        final subB = stream.listen(b.add);
+        e.emit(const _E2());
+
+        await Future(() {});
+        expect(a, hasLength(2));
+        expect(b, hasLength(2));
+        expect(a[1], isA<_E2>());
+        expect(b[1], isA<_E2>());
+
+        await subA.cancel();
+        await subB.cancel();
+        e.dispose();
+      });
+
+      test('cancelling one replay listener keeps others subscribed', () async {
+        final e = EffectEmitter<_E>(replay: 1);
+        e.emit(const _E());
+
+        final a = <_E>[], b = <_E>[];
+        final subA = e.stream.listen(a.add);
+        final subB = e.stream.listen(b.add);
+        await Future(() {});
+
+        await subA.cancel();
+        e.emit(const _E2());
+
+        await Future(() {});
+        expect(a, hasLength(1));
+        expect(b, hasLength(2));
+        expect(b[1], isA<_E2>());
+
+        await subB.cancel();
+        e.dispose();
+      });
+
+      test('replay stream closes after dispose', () async {
+        final e = EffectEmitter<_E>(replay: 1);
+        e.emit(const _E());
+        e.dispose();
+
+        final done = expectLater(
+          e.stream,
+          emitsInOrder([isA<_E>(), emitsDone]),
+        );
+
+        await done;
       });
 
       test('respects replay limit', () async {

@@ -45,7 +45,8 @@ class EffectEmitter<E extends UiEffect> {
   Stream<E> get stream {
     if (_history.isEmpty) return _controller.stream;
     return Stream<E>.multi((controller) {
-      for (final effect in _history) {
+      final history = List<E>.of(_history);
+      for (final effect in history) {
         controller.add(effect);
       }
       final sub = _controller.stream.listen(
@@ -55,7 +56,7 @@ class EffectEmitter<E extends UiEffect> {
         cancelOnError: false,
       );
       controller.onCancel = sub.cancel;
-    });
+    }, isBroadcast: true);
   }
 
   /// Closes the emitter. Subsequent [emit] calls are silently ignored.
@@ -70,11 +71,10 @@ class EffectEmitter<E extends UiEffect> {
     Function? onError,
     void Function()? onDone,
     bool? cancelOnError,
-  }) =>
-      stream.listen(
-        onData,
-        onError: onError,
-        onDone: onDone,
-        cancelOnError: cancelOnError ?? false,
-      );
+  }) => stream.listen(
+    onData,
+    onError: onError,
+    onDone: onDone,
+    cancelOnError: cancelOnError ?? false,
+  );
 }

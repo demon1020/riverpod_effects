@@ -10,7 +10,8 @@ up when the notifier is disposed.
 
 ## Requirements
 
-- Dart 3.8+ / Flutter 3.29+
+- Dart SDK `>=3.8.0 <4.0.0`
+- Flutter SDK `>=3.32.0`
 - Riverpod 3.0+
 - Platforms: Android, iOS, Linux, macOS, Web, Windows
 
