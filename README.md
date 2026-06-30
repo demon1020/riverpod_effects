@@ -12,7 +12,7 @@ Works with **Riverpod Generator** (`@riverpod`), **Notifier**, and **AsyncNotifi
 
 ```yaml
 dependencies:
-  riverpod_effects: ^0.1.0
+  riverpod_effects: ^0.2.0
 ```
 
 ---
@@ -42,7 +42,7 @@ class ShowSnackBar extends MyEffect {
 
 ### 2. Add the mixin to your ViewModel
 
-Mix `EffectMixin<MyEffect>` into your Riverpod-generated notifier:
+Mix `EffectMixin<MyEffect>` into your Riverpod-generated notifier and call `initEffects(ref)` in `build()`:
 
 ```dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -54,7 +54,7 @@ part 'my_view_model.g.dart';
 class MyViewModel extends _$MyViewModel with EffectMixin<MyEffect> {
   @override
   int build() {
-    ref.onDispose(disposeEffects);    // <-- clean up on dispose
+    initEffects(ref);    // <-- registers automatic cleanup
     return 0;
   }
 
@@ -128,8 +128,10 @@ ViewModel.effects     ← broadcast stream from EffectMixin
 EffectMixin           ← owned by your ViewModel
 ```
 
-- Effects are delivered **exactly once**.
+- Effects are delivered **exactly once** per listener.
 - Effects never rebuild the UI — they are **not part of state**.
+- Effects are delivered in **FIFO order**.
+- Stream errors are caught and reported via `FlutterError` (they never crash the widget tree).
 
 ---
 
@@ -138,11 +140,43 @@ EffectMixin           ← owned by your ViewModel
 | Class | Purpose |
 |-------|---------|
 | `UiEffect` | Base class for every effect. |
-| `EffectMixin<E>` | Mixin for Riverpod ViewModels. Provides `emitEffect()`, `effects`, `disposeEffects()`. |
+| `EffectMixin<E>` | Mixin for Riverpod ViewModels. Provides `emitEffect()`, `effects`, `disposeEffects()`, `hasListener`, `listen()`, `initEffects(ref)`. |
 | `EffectConsumer<E>` | Widget that listens to effects and builds UI. |
 | `EffectListener<E>` | Low-level stateful widget that subscribes to an effect stream. |
-| `EffectEmitter<E>` | Stream-based emitter (used internally by `EffectMixin`). |
-| `EffectNotifier<E>` | Abstract contract for notifiers that expose an `effects` stream. |
+| `EffectEmitter<E>` | Stream-based emitter. Supports optional `replay` of past effects for late listeners. |
+
+---
+
+## Advanced
+
+### Replay effects for late listeners
+
+By default, effects emitted before a widget subscribes are lost. To buffer past
+effects, pass `replay:` to `EffectEmitter`:
+
+```dart
+mixin EffectMixin<E extends UiEffect> {
+  // Override in your notifier to enable replay:
+  final EffectEmitter<E> _emitter = EffectEmitter<E>(replay: 5);
+}
+```
+
+### Check if anyone is listening
+
+```dart
+if (hasListener) {
+  emitEffect(const ExpensiveEffect());
+}
+```
+
+### Subscribe from non-widget code
+
+```dart
+final sub = notifier.listen((effect) {
+  // handle effect in a service or another notifier
+});
+// later: sub.cancel();
+```
 
 ---
 

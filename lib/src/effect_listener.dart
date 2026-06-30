@@ -4,9 +4,20 @@ import 'package:flutter/widgets.dart';
 
 import 'effect.dart';
 
+/// A stateful widget that subscribes to a [Stream] of [UiEffect]s and
+/// invokes [listener] for each emitted effect.
+///
+/// The subscription is created in [State.initState], updated when [stream]
+/// changes, and cancelled in [State.dispose]. Stream errors are reported
+/// via [FlutterError.reportError] and do not crash the widget tree.
 class EffectListener<E extends UiEffect> extends StatefulWidget {
+  /// The stream to listen to.
   final Stream<E> stream;
+
+  /// Called with the current [BuildContext] for each emitted effect.
   final void Function(BuildContext context, E effect) listener;
+
+  /// The widget subtree rendered below this listener.
   final Widget child;
 
   const EffectListener({
@@ -40,11 +51,25 @@ class _EffectListenerState<E extends UiEffect>
   }
 
   void _subscribe() {
-    _subscription = widget.stream.listen((effect) {
-      if (mounted) {
-        widget.listener(context, effect);
-      }
-    });
+    _subscription = widget.stream.listen(
+      (effect) {
+        if (mounted) {
+          widget.listener(context, effect);
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (mounted) {
+          FlutterError.reportError(
+            FlutterErrorDetails(
+              exception: error,
+              stack: stackTrace,
+              context: ErrorDescription('EffectListener stream error'),
+            ),
+          );
+        }
+      },
+      cancelOnError: false,
+    );
   }
 
   @override

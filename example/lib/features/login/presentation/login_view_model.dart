@@ -11,7 +11,7 @@ class LoginViewModel extends _$LoginViewModel
     with EffectMixin<LoginEffect> {
   @override
   LoginState build() {
-    ref.onDispose(disposeEffects);
+    initEffects(ref);
     return const LoginState();
   }
 
